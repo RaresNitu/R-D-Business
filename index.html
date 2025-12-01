@@ -1,1 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Analyzer</title>
+  <style>
+    :root {
+      --bg: #0e1116;
+      --panel: #161b22;
+      --accent: #7c3aed;
+      --accent-soft: rgba(124, 58, 237, 0.16);
+      --text: #e6edf3;
+      --muted: #9ca3af;
+      --border: #1f2937;
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.08), transparent 25%),
+        radial-gradient(circle at 90% 10%, rgba(14, 165, 233, 0.08), transparent 25%),
+        var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 880px;
+      line-height: 1.5;
+    }
+
+    .notice {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      color: #ede9fe;
+      padding: 10px 12px;
+      border-radius: 10px;
+      width: fit-content;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 15px 40px rgba(124, 58, 237, 0.15);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 450px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .input-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button,
+    label.file-btn {
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(14, 165, 233, 0.18));
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button.secondary {
+      background: transparent;
+      border-color: var(--border);
+    }
+
+    button:hover,
+    label.file-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      box-shadow: 0 10px 25px rgba(124, 58, 237, 0.2);
+    }
+
+    button:active,
+    label.file-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 92px;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+
+    .stat .value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .stat small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .frequency-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .frequency-item {
+      display: flex;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .steps {
+      list-style: decimal;
+      padding-left: 18px;
+      margin: 8px 0 0;
+      color: var(--text);
+      display: grid;
+      gap: 8px;
+    }
+
+    .steps code {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 4px 0 0;
+    }
+
+    .badge {
+      background: rgba(14, 165, 233, 0.1);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      color: #7dd3fc;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      textarea {
+        min-height: 320px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="notice">Local-only • No external APIs</div>
+    <h1>Text Analyzer</h1>
+    <p class="subtitle">
+      Paste or load any document to get immediate insight. Everything happens in your browser—no uploads, no costs, and
+      safe for large files.
+    </p>
+  </header>
+
+  <main>
+    <section class="card input-card">
+      <div class="controls">
+        <button id="sample-btn" type="button" title="Insert a sample text to try the analyzer quickly">
+          ➕ Use sample text
+        </button>
+        <label for="file-input" class="file-btn" title="Load a local .txt file without sending it anywhere">
+          📂 Load .txt file
+        </label>
+        <input type="file" id="file-input" accept=".txt" hidden />
+        <button id="clear-btn" class="secondary" type="button">🧹 Clear</button>
+        <span class="hint">Updates in real time as you type.</span>
+      </div>
+      <textarea id="text-input" placeholder="Paste or type your content here..."></textarea>
+      <p class="hint">
+        Tip: Use this for articles, transcripts, or any long-form content. The analyzer calculates on the fly and never
+        calls an external API.
+      </p>
+    </section>
+
+    <section class="card">
+      <h3 style="margin-top: 0">Highlights</h3>
+      <div class="stats-grid" id="stats">
+        <div class="stat">
+          <div class="label">Words</div>
+          <div class="value" id="word-count">0</div>
+          <small>Estimated reading speed: 200 wpm</small>
+        </div>
+        <div class="stat">
+          <div class="label">Characters</div>
+          <div class="value" id="char-count">0</div>
+          <small id="char-no-space">0 without spaces</small>
+        </div>
+        <div class="stat">
+          <div class="label">Sentences</div>
+          <div class="value" id="sentence-count">0</div>
+          <small id="avg-length">0 words per sentence</small>
+        </div>
+        <div class="stat">
+          <div class="label">Paragraphs</div>
+          <div class="value" id="paragraph-count">0</div>
+          <small id="longest-word">Longest word: –</small>
+        </div>
+        <div class="stat">
+          <div class="label">Reading time</div>
+          <div class="value" id="reading-time">0 min</div>
+          <small id="unique-words">Unique words: 0</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3 style="margin-top: 0">Top keywords</h3>
+      <p class="hint">Common words are filtered out to highlight meaningful terms.</p>
+      <ul class="frequency-list" id="frequency-list"></ul>
+    </section>
+
+    <section class="card">
+      <h3 style="margin-top: 0">Make it public or share</h3>
+      <p class="hint">
+        The analyzer is just a single <code>index.html</code> file. Serve it locally or host it anywhere that supports static
+        files—no backend needed.
+      </p>
+      <ul class="steps">
+        <li>
+          For yourself: open <code>index.html</code> directly in the browser, or run a local server with
+          <code>python -m http.server 8000</code> and visit <code>http://localhost:8000</code>.
+        </li>
+        <li>
+          To share privately: zip the folder and send it, or place <code>index.html</code> on a USB drive—everything works
+          offline.
+        </li>
+        <li>
+          To publish: drop the file into any static host (GitHub Pages, Netlify, Vercel). On GitHub Pages, push this repo and
+          enable Pages for the <code>work</code> branch so friends can try it from a link.
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    const textInput = document.getElementById("text-input");
+    const wordCountEl = document.getElementById("word-count");
+    const charCountEl = document.getElementById("char-count");
+    const charNoSpaceEl = document.getElementById("char-no-space");
+    const sentenceCountEl = document.getElementById("sentence-count");
+    const paragraphCountEl = document.getElementById("paragraph-count");
+    const readingTimeEl = document.getElementById("reading-time");
+    const longestWordEl = document.getElementById("longest-word");
+    const avgLengthEl = document.getElementById("avg-length");
+    const uniqueWordsEl = document.getElementById("unique-words");
+    const frequencyList = document.getElementById("frequency-list");
+
+    const stopWords = new Set([
+      "a",
+      "an",
+      "and",
+      "are",
+      "as",
+      "at",
+      "be",
+      "but",
+      "by",
+      "for",
+      "if",
+      "in",
+      "into",
+      "is",
+      "it",
+      "no",
+      "not",
+      "of",
+      "on",
+      "or",
+      "such",
+      "that",
+      "the",
+      "their",
+      "then",
+      "there",
+      "these",
+      "they",
+      "this",
+      "to",
+      "was",
+      "will",
+      "with"
+    ]);
+
+    const sampleText = `The Text Analyzer runs entirely in your browser. You can paste articles, reports, or long transcripts without worrying about uploads or API costs. Statistics update instantly so you can refine drafts, find repeated keywords, and keep writing.`;
+
+    function normalizeWords(text) {
+      const cleaned = text
+        .toLowerCase()
+        .replace(/[^\w'\s-]/g, " ")
+        .replace(/_/g, " ");
+      return cleaned.match(/[\w']+/g) || [];
+    }
+
+    function countSentences(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return 0;
+      const sentences = trimmed.split(/(?<=[.!?])\s+/g).filter(Boolean);
+      return sentences.length;
+    }
+
+    function countParagraphs(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return 0;
+      return trimmed.split(/\n\s*\n/).filter(Boolean).length;
+    }
+
+    function getTopFrequencies(words, limit = 8) {
+      const counts = new Map();
+      words.forEach((word) => {
+        const cleaned = word.replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, "");
+        if (!cleaned || cleaned.length < 3 || stopWords.has(cleaned)) {
+          return;
+        }
+        counts.set(cleaned, (counts.get(cleaned) || 0) + 1);
+      });
+
+      return [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, limit);
+    }
+
+    function renderFrequencies(frequencies) {
+      frequencyList.innerHTML = "";
+
+      if (!frequencies.length) {
+        const empty = document.createElement("li");
+        empty.textContent = "No meaningful keywords yet.";
+        empty.className = "hint";
+        frequencyList.appendChild(empty);
+        return;
+      }
+
+      frequencies.forEach(([word, count]) => {
+        const li = document.createElement("li");
+        li.className = "frequency-item";
+        li.innerHTML = `<span>${word}</span><span>${count}</span>`;
+        frequencyList.appendChild(li);
+      });
+    }
+
+    function analyze() {
+      const text = textInput.value;
+      const words = normalizeWords(text);
+      const wordCount = words.length;
+      const charCount = text.length;
+      const charNoSpaces = text.replace(/\s/g, "").length;
+      const sentenceCount = countSentences(text);
+      const paragraphCount = countParagraphs(text);
+      const readingTimeMinutes = Math.max(1, Math.round(wordCount / 200));
+      const longestWord = words.reduce((longest, word) => (word.length > longest.length ? word : longest), "");
+      const uniqueWords = new Set(words.map((w) => w.toLowerCase())).size;
+      const averageWordsPerSentence = sentenceCount ? (wordCount / sentenceCount).toFixed(1) : 0;
+
+      wordCountEl.textContent = wordCount.toLocaleString();
+      charCountEl.textContent = charCount.toLocaleString();
+      charNoSpaceEl.textContent = `${charNoSpaces.toLocaleString()} without spaces`;
+      sentenceCountEl.textContent = sentenceCount.toLocaleString();
+      avgLengthEl.textContent = `${averageWordsPerSentence} words per sentence`;
+      paragraphCountEl.textContent = paragraphCount.toLocaleString();
+      longestWordEl.textContent = `Longest word: ${longestWord || "–"}`;
+      uniqueWordsEl.textContent = `Unique words: ${uniqueWords.toLocaleString()}`;
+      readingTimeEl.textContent = `${readingTimeMinutes} min`;
+
+      renderFrequencies(getTopFrequencies(words));
+    }
+
+    document.getElementById("sample-btn").addEventListener("click", () => {
+      textInput.value = sampleText;
+      analyze();
+      textInput.focus();
+    });
+
+    document.getElementById("clear-btn").addEventListener("click", () => {
+      textInput.value = "";
+      analyze();
+      textInput.focus();
+    });
+
+    document.getElementById("file-input").addEventListener("change", (event) => {
+      const [file] = event.target.files;
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        textInput.value = e.target.result;
+        analyze();
+      };
+      reader.readAsText(file);
+    });
+
+    textInput.addEventListener("input", analyze);
+
+    analyze();
+  </script>
+</body>
+</html>
